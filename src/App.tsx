@@ -153,6 +153,17 @@ export default function App() {
   const [nugenKey, setNugenKey] = useState<string>('nugen-9c49c53bbb388d51');
   const [email, setEmail] = useState<string>('subscriber@gazette.com');
   const [password, setPassword] = useState<string>('password123');
+  const [authLoading, setAuthLoading] = useState<string>('');
+
+  const handleSocialLogin = (provider: string) => {
+    setAuthLoading(provider);
+    setTimeout(() => {
+      setEmail(`press.${provider.toLowerCase()}@gazette.com`);
+      setPassword('••••••••••••');
+      setAuthLoading('');
+      setView('landing');
+    }, 1200);
+  };
 
   // Dynamic states updated via Nugen API
   const [matchConfidence, setMatchConfidence] = useState<number>(96);
@@ -738,11 +749,26 @@ export default function App() {
                 </div>
 
                 {/* Social Login Buttons */}
+                {authLoading && (
+                  <div style={{
+                    fontSize: '10px',
+                    fontFamily: 'var(--font-mono)',
+                    color: 'var(--text-dark)',
+                    textAlign: 'center',
+                    border: 'var(--border-dashed)',
+                    padding: '8px',
+                    marginBottom: '16px',
+                    textTransform: 'uppercase'
+                  }}>
+                    [Connecting to {authLoading} secure gateway...]
+                  </div>
+                )}
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
                   {['Google', 'GitHub', 'Facebook'].map((social) => (
                     <button 
                       key={social}
-                      onClick={() => setView('landing')}
+                      onClick={() => handleSocialLogin(social)}
+                      disabled={!!authLoading}
                       className="news-button-outline"
                       style={{
                         flex: 1,
@@ -751,10 +777,12 @@ export default function App() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: '4px'
+                        gap: '4px',
+                        opacity: authLoading ? 0.5 : 1,
+                        cursor: authLoading ? 'not-allowed' : 'pointer'
                       }}
                     >
-                      <span>{social}</span>
+                      <span>{authLoading === social ? 'LOAD...' : social}</span>
                     </button>
                   ))}
                 </div>
