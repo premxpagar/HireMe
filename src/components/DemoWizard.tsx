@@ -91,8 +91,8 @@ export const DemoWizard: React.FC<DemoWizardProps> = ({
                   fontFamily: 'var(--font-mono)', 
                   fontSize: '11px',
                   fontWeight: 'bold',
-                  textDecoration: isCompleted ? 'line-through' : 'none',
-                  color: isActive ? 'var(--text-dark)' : isCompleted ? 'var(--text-muted)' : 'var(--text-muted)'
+                  textDecoration: 'none',
+                  color: (isActive || isCompleted) ? 'var(--text-dark)' : 'var(--text-muted)'
                 }}>
                   {isActive ? '● ' : isCompleted ? '☑ ' : '☐ '}
                   {s.name}
