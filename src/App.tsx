@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { DemoWizard } from './components/DemoWizard';
+import { ClerkProvider, SignInButton, useUser } from '@clerk/clerk-react';
 
 // Stylized woodcut/line-drawing representation of the monk bird
 const MonkBirdLineArt = () => (
@@ -144,7 +145,7 @@ const INITIAL_AGENTS: Agent[] = [
   }
 ];
 
-export default function App() {
+function AppContent({ clerkKey, setClerkKey, clerkIsSignedIn, clerkUser }: AppContentProps) {
   const [currentView, setView] = useState<string>('login');
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [walletConnected, setWalletConnected] = useState<boolean>(true);
@@ -244,6 +245,14 @@ export default function App() {
       document.body.classList.remove('dark-mode');
     }
   }, [darkMode]);
+
+  // Handle Clerk auto-login redirect
+  useEffect(() => {
+    if (clerkKey && clerkIsSignedIn && clerkUser && currentView === 'login') {
+      setView('landing');
+      setEmail(clerkUser.primaryEmailAddress?.emailAddress || 'subscriber@gazette.com');
+    }
+  }, [clerkKey, clerkIsSignedIn, clerkUser, currentView]);
 
   // Helper to connect mock wallet
   const connectWallet = () => {
@@ -653,6 +662,8 @@ export default function App() {
         walletBalance={walletBalance}
         nugenKey={nugenKey}
         setNugenKey={setNugenKey}
+        clerkKey={clerkKey}
+        setClerkKey={setClerkKey}
       />
 
       {/* Main Content Area */}
@@ -701,91 +712,113 @@ export default function App() {
                   Login
                 </h1>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', marginBottom: '6px' }}>Email</label>
-                    <input 
-                      type="text" 
-                      placeholder="username@gmail.com" 
-                      className="news-input"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
+                {clerkKey ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', margin: '20px 0' }}>
+                    <div className="news-panel" style={{ textAlign: 'center', padding: '24px 16px', background: 'transparent' }}>
+                      <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '14px', textTransform: 'uppercase', fontWeight: 'bold' }}>Clerk Authenticator</span>
+                      <SignInButton mode="modal">
+                        <button className="news-button" style={{ width: '100%', padding: '12px', fontSize: '14px' }}>
+                          Authenticate Clerk Credentials
+                        </button>
+                      </SignInButton>
+                      <span style={{ display: 'block', fontSize: '9px', fontFamily: 'var(--font-mono)', opacity: 0.6, marginTop: '10px' }}>
+                        Press credentials will be loaded securely from your Clerk profile.
+                      </span>
+                    </div>
+
+                    <div style={{ textAlign: 'center', fontSize: '11px', fontFamily: 'var(--font-mono)', opacity: 0.6 }}>
+                      [SOCIAL LOGINS MANAGED SECURELY BY CLERK]
+                    </div>
                   </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', marginBottom: '6px' }}>Password</label>
-                    <input 
-                      type="password" 
-                      placeholder="Password" 
-                      className="news-input"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                  </div>
-                </div>
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', marginBottom: '6px' }}>Email</label>
+                        <input 
+                          type="text" 
+                          placeholder="username@gmail.com" 
+                          className="news-input"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', marginBottom: '6px' }}>Password</label>
+                        <input 
+                          type="password" 
+                          placeholder="Password" 
+                          className="news-input"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                        />
+                      </div>
+                    </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
-                  <a href="#forgot" style={{ fontSize: '12px', color: 'inherit', textDecoration: 'underline', fontFamily: 'var(--font-mono)' }}>Forgot Password?</a>
-                </div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
+                      <a href="#forgot" style={{ fontSize: '12px', color: 'inherit', textDecoration: 'underline', fontFamily: 'var(--font-mono)' }}>Forgot Password?</a>
+                    </div>
 
-                <button 
-                  onClick={() => {
-                    if (!email || !password) {
-                      alert("Please enter both subscriber email and credentials password.");
-                      return;
-                    }
-                    setView('landing');
-                  }}
-                  className="news-button"
-                  style={{ width: '100%', padding: '12px', fontSize: '14px' }}
-                >
-                  Sign in
-                </button>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '16px 0' }}>
-                  <div style={{ flex: 1, height: '1px', background: 'var(--text-dark)' }}></div>
-                  <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase' }}>Or Continue With</span>
-                  <div style={{ flex: 1, height: '1px', background: 'var(--text-dark)' }}></div>
-                </div>
-
-                {/* Social Login Buttons */}
-                {authLoading && (
-                  <div style={{
-                    fontSize: '10px',
-                    fontFamily: 'var(--font-mono)',
-                    color: 'var(--text-dark)',
-                    textAlign: 'center',
-                    border: 'var(--border-dashed)',
-                    padding: '8px',
-                    marginBottom: '16px',
-                    textTransform: 'uppercase'
-                  }}>
-                    [Connecting to {authLoading} secure gateway...]
-                  </div>
-                )}
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-                  {['Google', 'GitHub', 'Facebook'].map((social) => (
                     <button 
-                      key={social}
-                      onClick={() => handleSocialLogin(social)}
-                      disabled={!!authLoading}
-                      className="news-button-outline"
-                      style={{
-                        flex: 1,
-                        padding: '8px',
-                        fontSize: '11px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '4px',
-                        opacity: authLoading ? 0.5 : 1,
-                        cursor: authLoading ? 'not-allowed' : 'pointer'
+                      onClick={() => {
+                        if (!email || !password) {
+                          alert("Please enter both subscriber email and credentials password.");
+                          return;
+                        }
+                        setView('landing');
                       }}
+                      className="news-button"
+                      style={{ width: '100%', padding: '12px', fontSize: '14px' }}
                     >
-                      <span>{authLoading === social ? 'LOAD...' : social}</span>
+                      Sign in
                     </button>
-                  ))}
-                </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '16px 0' }}>
+                      <div style={{ flex: 1, height: '1px', background: 'var(--text-dark)' }}></div>
+                      <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase' }}>Or Continue With</span>
+                      <div style={{ flex: 1, height: '1px', background: 'var(--text-dark)' }}></div>
+                    </div>
+
+                    {/* Social Login Buttons */}
+                    {authLoading && (
+                      <div style={{
+                        fontSize: '10px',
+                        fontFamily: 'var(--font-mono)',
+                        color: 'var(--text-dark)',
+                        textAlign: 'center',
+                        border: 'var(--border-dashed)',
+                        padding: '8px',
+                        marginBottom: '16px',
+                        textTransform: 'uppercase'
+                      }}>
+                        [Connecting to {authLoading} secure gateway...]
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                      {['Google', 'GitHub', 'Facebook'].map((social) => (
+                        <button 
+                          key={social}
+                          onClick={() => handleSocialLogin(social)}
+                          disabled={!!authLoading}
+                          className="news-button-outline"
+                          style={{
+                            flex: 1,
+                            padding: '8px',
+                            fontSize: '11px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '4px',
+                            opacity: authLoading ? 0.5 : 1,
+                            cursor: authLoading ? 'not-allowed' : 'pointer'
+                          }}
+                        >
+                          <span>{authLoading === social ? 'LOAD...' : social}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
 
                 <div style={{ textAlign: 'center', fontSize: '12px', fontFamily: 'var(--font-serif)', marginTop: '8px' }}>
                   <span>Don't have an account? </span>
@@ -1612,5 +1645,58 @@ export default function App() {
         }
       `}</style>
     </div>
+  );
+}
+
+interface AppContentProps {
+  clerkKey: string;
+  setClerkKey: (key: string) => void;
+  clerkIsSignedIn: boolean;
+  clerkUser: any;
+}
+
+const ClerkUserLoader = ({ children }: { children: (userProps: { isSignedIn: boolean; user: any }) => React.ReactNode }) => {
+  const { isSignedIn, user } = useUser();
+  return <>{children({ isSignedIn: !!isSignedIn, user })}</>;
+};
+
+export default function App() {
+  const [clerkKey, setClerkKey] = useState<string>(
+    () => localStorage.getItem('hireme_clerk_key') || import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || ''
+  );
+
+  const handleSaveClerkKey = (newKey: string) => {
+    setClerkKey(newKey);
+    if (newKey) {
+      localStorage.setItem('hireme_clerk_key', newKey);
+    } else {
+      localStorage.removeItem('hireme_clerk_key');
+    }
+  };
+
+  if (clerkKey) {
+    return (
+      <ClerkProvider publishableKey={clerkKey}>
+        <ClerkUserLoader>
+          {({ isSignedIn, user }) => (
+            <AppContent 
+              clerkKey={clerkKey} 
+              setClerkKey={handleSaveClerkKey} 
+              clerkIsSignedIn={isSignedIn} 
+              clerkUser={user} 
+            />
+          )}
+        </ClerkUserLoader>
+      </ClerkProvider>
+    );
+  }
+
+  return (
+    <AppContent 
+      clerkKey={clerkKey} 
+      setClerkKey={handleSaveClerkKey} 
+      clerkIsSignedIn={false} 
+      clerkUser={null} 
+    />
   );
 }
