@@ -20,10 +20,10 @@ We completely transformed the UI theme to represent an authentic print gazette:
 
 ---
 
-## 2. Login Page Fixes
-We resolved the functional and style layout issues on the subscriber sign-in desk:
-- **Interactive State Bindings**: Added React state hooks (`email` and `password`) bound directly to the input fields.
-- **Sign In Validation**: Added validation checking to ensure credentials are populated before advancing to the landing gazette view.
+## 2. Interactive Login & Social Login Gateway
+We resolved all functional issues on the subscriber sign-in desk:
+- **Google, GitHub, & Facebook Buttons**: Integrated a simulated OAuth loader. Clicking any social button shows a dashed banner reading `[Connecting to <provider> secure gateway...]`, disables double-clicks, fills in a provider-specific email/credentials state, and redirects the user safely to the landing page after a brief delay.
+- **Sign In Inputs & State Validation**: Added React state hooks (`email` and `password`) bound directly to the input fields, complete with validation checking to prevent signing in with empty fields.
 - **Aesthetic Refinement**: Nested the login card neatly within the thick-bordered news panel next to the monk bird woodcut illustration.
 
 ---
