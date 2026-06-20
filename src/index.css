@@ -1,0 +1,178 @@
+/* Custom Style variables for HireMe matching the soft peach theme and glassmorphism */
+:root {
+  --primary: #E85A24;
+  --primary-hover: #D14513;
+  --primary-light: rgba(232, 90, 36, 0.15);
+  --primary-border: rgba(232, 90, 36, 0.3);
+  
+  --bg-cream-light: #FFF9F3;
+  --bg-cream-dark: #FFE6D5;
+  --bg-dark-base: #121016;
+  --bg-dark-card: #1C1924;
+  
+  --text-dark: #1E1A24;
+  --text-muted: #6B6572;
+  --text-light: #F4EFF6;
+  --text-light-muted: #A6A0AF;
+  
+  --border-light: rgba(232, 90, 36, 0.12);
+  --border-glass: rgba(255, 255, 255, 0.25);
+  --border-glass-dark: rgba(255, 255, 255, 0.08);
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Outfit', system-ui, -apple-system, sans-serif;
+  
+  --shadow-sm: 0 2px 8px rgba(232, 90, 36, 0.05);
+  --shadow-md: 0 8px 30px rgba(232, 90, 36, 0.08);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.12);
+  --shadow-glass: 0 8px 32px 0 rgba(232, 90, 36, 0.06);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) transparent;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--text-dark);
+  background: linear-gradient(135deg, var(--bg-cream-light) 0%, var(--bg-cream-dark) 100%);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+body.dark-mode {
+  color: var(--text-light);
+  background: linear-gradient(135deg, var(--bg-dark-base) 0%, #1a1622 100%);
+}
+
+button, input, textarea, select {
+  font-family: inherit;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* Animations */
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(1deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.95; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Glassmorphism helpers */
+.glass-container {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-glass);
+  border-radius: 24px;
+  box-shadow: var(--shadow-glass);
+}
+
+.dark-mode .glass-container {
+  background: rgba(28, 25, 36, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-glass-dark);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(232, 90, 36, 0.04);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark-mode .glass-card {
+  background: rgba(40, 35, 52, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(232, 90, 36, 0.08);
+  border-color: var(--primary-border);
+}
+
+.dark-mode .glass-card:hover {
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+  border-color: rgba(232, 90, 36, 0.2);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(232, 90, 36, 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Pinterest style column grid */
+.pinterest-grid {
+  columns: 4 280px;
+  column-gap: 20px;
+  width: 100%;
+}
+@media (max-width: 1200px) {
+  .pinterest-grid {
+    columns: 3 280px;
+  }
+}
+@media (max-width: 900px) {
+  .pinterest-grid {
+    columns: 2 280px;
+  }
+}
+@media (max-width: 600px) {
+  .pinterest-grid {
+    columns: 1;
+  }
+}
+
+.pinterest-item {
+  break-inside: avoid;
+  margin-bottom: 20px;
+  display: inline-block;
+  width: 100%;
+}
