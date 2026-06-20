@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   Wallet, Cpu, Users, Award, Terminal, 
-  Settings, PlusCircle, Network, Sun, Moon, Sparkles, Check, Key
+  Settings, PlusCircle, Network, Sun, Moon, Check, Key
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -39,11 +39,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navItems = [
     { id: 'landing', label: 'Home', icon: Cpu },
-    { id: 'marketplace', label: 'Marketplace', icon: Users },
-    { id: 'create-job', label: 'Post Job', icon: PlusCircle },
-    { id: 'leaderboard', label: 'Leaderboard', icon: Award },
-    { id: 'network', label: 'Agent Network', icon: Network },
-    { id: 'explorer', label: 'Monad Explorer', icon: Terminal },
+    { id: 'marketplace', label: 'Gazette Jobs', icon: Users },
+    { id: 'create-job', label: 'Post Dispatch', icon: PlusCircle },
+    { id: 'leaderboard', label: 'Roll of Honor', icon: Award },
+    { id: 'network', label: 'Agent Mesh', icon: Network },
+    { id: 'explorer', label: 'Ledger Chronicle', icon: Terminal },
   ];
 
   return (
@@ -53,39 +53,40 @@ export const Navbar: React.FC<NavbarProps> = ({
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '16px 24px',
-        borderBottom: '1px solid var(--border-light)',
-        background: 'rgba(255, 255, 255, 0.4)',
-        backdropFilter: 'blur(10px)',
+        borderBottom: 'var(--border-double)',
+        background: 'var(--bg-paper)',
         position: 'sticky',
         top: 0,
         zIndex: 50,
-        transition: 'all 0.3s'
-      }} className="navbar-container">
+      }}>
         
-        {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setView('landing')}>
+        {/* Newspaper Logo Section */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => setView('landing')}>
           <div style={{
-            background: 'var(--primary)',
-            color: 'white',
-            width: '40px',
-            height: '40px',
-            borderRadius: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 10px rgba(232, 90, 36, 0.3)',
+            background: 'var(--text-dark)',
+            color: 'var(--bg-paper)',
+            padding: '4px 10px',
+            border: 'var(--border-thin)',
+            fontFamily: 'var(--font-serif)',
+            fontWeight: 'bold',
+            fontSize: '24px',
+            letterSpacing: '-1px'
           }}>
-            <Sparkles size={22} />
+            H M
           </div>
           <div>
-            <span style={{ fontSize: '20px', fontWeight: 800, fontFamily: 'var(--font-heading)', color: 'var(--primary)' }}>HireMe</span>
-            <span style={{ display: 'block', fontSize: '10px', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.7 }}>Monad network</span>
+            <span style={{ fontSize: '22px', fontWeight: 900, fontFamily: 'var(--font-serif)', color: 'var(--text-dark)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
+              The HireMe Gazette
+            </span>
+            <span style={{ display: 'block', fontSize: '9px', fontFamily: 'var(--font-mono)', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.8 }}>
+              Monad Ledger Edition
+            </span>
           </div>
         </div>
 
-        {/* Navigation Items */}
+        {/* Nav Links */}
         {currentView !== 'login' && (
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentView === item.id || 
@@ -99,19 +100,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
-                    padding: '8px 16px',
-                    border: 'none',
-                    borderRadius: '12px',
+                    padding: '8px 12px',
+                    background: isActive ? 'var(--text-dark)' : 'transparent',
+                    color: isActive ? 'var(--bg-paper)' : 'var(--text-dark)',
+                    border: '1px solid transparent',
+                    borderBottom: isActive ? 'var(--border-thin)' : 'none',
                     cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    transition: 'all 0.2s',
-                    background: isActive ? 'var(--primary-light)' : 'transparent',
-                    color: isActive ? 'var(--primary)' : 'inherit',
+                    fontSize: '12px',
+                    fontFamily: 'var(--font-mono)',
+                    textTransform: 'uppercase',
+                    fontWeight: 'bold',
                   }}
-                  className="nav-btn"
                 >
-                  <Icon size={16} />
+                  <Icon size={13} />
                   <span>{item.label}</span>
                 </button>
               );
@@ -119,48 +120,45 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         )}
 
-        {/* Actions (Wallet, Dark Mode, Settings) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {/* Dark Mode */}
           <button
             onClick={() => setDarkMode(!darkMode)}
             style={{
               background: 'transparent',
-              border: '1px solid var(--border-light)',
-              borderRadius: '12px',
-              width: '40px',
-              height: '40px',
+              border: 'var(--border-thin)',
+              width: '36px',
+              height: '36px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: 'inherit'
+              color: 'var(--text-dark)'
             }}
           >
-            {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+            {darkMode ? <Sun size={16} /> : <Moon size={16} />}
           </button>
 
-          {/* Nugen API Settings */}
+          {/* Settings */}
           <button
             onClick={() => setShowSettings(true)}
             style={{
               background: 'transparent',
-              border: '1px solid var(--border-light)',
-              borderRadius: '12px',
-              width: '40px',
-              height: '40px',
+              border: 'var(--border-thin)',
+              width: '36px',
+              height: '36px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: 'inherit'
+              color: 'var(--text-dark)'
             }}
-            title="Nugen Platform Settings"
           >
-            <Settings size={18} />
+            <Settings size={16} />
           </button>
 
-          {/* Monad Wallet Button */}
+          {/* Wallet */}
           {currentView !== 'login' && (
             <button
               onClick={connectWallet}
@@ -168,23 +166,22 @@ export const Navbar: React.FC<NavbarProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                padding: '10px 18px',
-                background: walletConnected ? 'transparent' : 'var(--primary)',
-                color: walletConnected ? 'inherit' : 'white',
-                border: walletConnected ? '1px solid var(--border-light)' : 'none',
-                borderRadius: '12px',
+                padding: '8px 14px',
+                background: 'transparent',
+                color: 'var(--text-dark)',
+                border: 'var(--border-thin)',
                 cursor: 'pointer',
-                fontWeight: 600,
-                fontSize: '14px',
-                boxShadow: walletConnected ? 'none' : '0 4px 12px rgba(232, 90, 36, 0.2)',
-                transition: 'all 0.2s'
+                fontFamily: 'var(--font-mono)',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                textTransform: 'uppercase'
               }}
             >
-              <Wallet size={16} />
+              <Wallet size={12} />
               <span>
                 {walletConnected 
-                  ? `${walletBalance.toFixed(1)} MON (${walletAddress.substring(0, 6)}...${walletAddress.substring(38)})`
-                  : 'Connect Wallet'
+                  ? `${walletAddress.substring(0, 6)}... (${walletBalance.toFixed(1)} MON)`
+                  : 'Connect Ledger'
                 }
               </span>
             </button>
@@ -200,82 +197,54 @@ export const Navbar: React.FC<NavbarProps> = ({
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          backdropFilter: 'blur(4px)',
+          background: 'rgba(0, 0, 0, 0.7)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 1000
         }}>
-          <div className="glass-container" style={{
+          <div className="news-panel-thick" style={{
             width: '100%',
-            maxWidth: '480px',
+            maxWidth: '460px',
             padding: '32px',
-            background: darkMode ? '#1C1924' : '#FFF9F3',
+            background: 'var(--bg-paper)',
             textAlign: 'left'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-              <Key style={{ color: 'var(--primary)' }} />
-              <h2 style={{ fontSize: '20px', margin: 0 }}>Nugen Intelligence Keys</h2>
+              <Key size={18} />
+              <h2 style={{ fontSize: '18px', margin: 0, textTransform: 'uppercase' }}>Nugen Credentials</h2>
             </div>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
-              Configure your Nugen API Key to run real agent matches, synthetic training cycles, or evaluation checks. If left blank, the app will run in high-fidelity mock/simulation mode.
+            <p style={{ fontSize: '12px', marginBottom: '20px', fontFamily: 'var(--font-serif)' }}>
+              Configure your Nugen API Key bearer token below. If left blank, the platform executes using local heuristic emulations.
             </p>
             
             <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Nugen API Bearer Token
+              <label style={{ display: 'block', fontSize: '10px', fontFamily: 'var(--font-mono)', marginBottom: '8px', textTransform: 'uppercase' }}>
+                Bearer Token
               </label>
               <input
                 type="password"
-                placeholder={nugenKey ? "••••••••••••••••••••••••••••" : "Paste Bearer Token here..."}
+                placeholder={nugenKey ? "••••••••••••••••" : "INPUT KEY..."}
                 value={tempKey}
                 onChange={(e) => setTempKey(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '12px',
-                  border: '1px solid var(--border-light)',
-                  background: darkMode ? '#282334' : 'white',
-                  color: 'inherit',
-                  outline: 'none',
-                  fontSize: '14px'
-                }}
+                className="news-input"
               />
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setShowSettings(false)}
-                style={{
-                  padding: '10px 20px',
-                  background: 'transparent',
-                  border: '1px solid var(--border-light)',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  color: 'inherit',
-                  fontWeight: 600
-                }}
+                className="news-button-outline"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveKey}
-                style={{
-                  padding: '10px 20px',
-                  background: 'var(--primary)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
+                className="news-button"
+                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
               >
-                <Check size={16} />
-                Save Settings
+                <Check size={14} />
+                Save Changes
               </button>
             </div>
           </div>
