@@ -5,6 +5,7 @@ import {
 import { Navbar } from './components/Navbar';
 import { DemoWizard } from './components/DemoWizard';
 import { ClerkProvider, SignInButton, useUser } from '@clerk/clerk-react';
+import { activeSupabase, reinitSupabase, isSupabaseConfigured } from './lib/supabase';
 
 // Stylized woodcut/line-drawing representation of the monk bird
 const MonkBirdLineArt = () => (
@@ -145,7 +146,18 @@ const INITIAL_AGENTS: Agent[] = [
   }
 ];
 
-function AppContent({ clerkKey, setClerkKey, clerkIsSignedIn, clerkUser }: AppContentProps) {
+function AppContent({ 
+  clerkKey, 
+  setClerkKey, 
+  clerkIsSignedIn, 
+  clerkUser,
+  supabaseUrl,
+  setSupabaseUrl,
+  supabaseAnonKey,
+  setSupabaseAnonKey,
+  supabaseUser,
+  handleLogout
+}: AppContentProps) {
   const [currentView, setView] = useState<string>('login');
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [walletConnected, setWalletConnected] = useState<boolean>(true);
@@ -253,6 +265,85 @@ function AppContent({ clerkKey, setClerkKey, clerkIsSignedIn, clerkUser }: AppCo
       setEmail(clerkUser.primaryEmailAddress?.emailAddress || 'subscriber@gazette.com');
     }
   }, [clerkKey, clerkIsSignedIn, clerkUser, currentView]);
+
+  // Handle Supabase Google OAuth callback & route protection
+  useEffect(() => {
+    const handleAuthCallback = async () => {
+      const path = window.location.pathname;
+      if (path === '/auth/callback') {
+        // Handle OAuth callback logic
+        const { data: { session } } = await activeSupabase.auth.getSession();
+        if (session && session.user) {
+          const user = session.user;
+          try {
+            await activeSupabase.from('users').upsert({
+              id: user.id,
+              email: user.email || '',
+              avatar_url: user.user_metadata?.avatar_url || '',
+              provider: 'google'
+            });
+          } catch (err) {
+            console.warn("Google OAuth: users profiles upsert failed (profiles table might not exist):", err);
+          }
+          window.history.pushState({}, '', '/dashboard');
+          setView('landing');
+        } else {
+          // If no session parsed initially, check if hash contains token and wait a brief moment
+          if (window.location.hash.includes('access_token')) {
+            setTimeout(async () => {
+              const { data: { session: s2 } } = await activeSupabase.auth.getSession();
+              if (s2 && s2.user) {
+                const user = s2.user;
+                try {
+                  await activeSupabase.from('users').upsert({
+                    id: user.id,
+                    email: user.email || '',
+                    avatar_url: user.user_metadata?.avatar_url || '',
+                    provider: 'google'
+                  });
+                } catch (err) {
+                  console.warn("Could not insert user profile after retry:", err);
+                }
+                window.history.pushState({}, '', '/dashboard');
+                setView('landing');
+              } else {
+                window.history.pushState({}, '', '/');
+                setView('login');
+              }
+            }, 600);
+          } else {
+            window.history.pushState({}, '', '/');
+            setView('login');
+          }
+        }
+      } else if (path === '/dashboard') {
+        const isAuthed = clerkIsSignedIn || !!supabaseUser || localStorage.getItem('hireme_mock_authed') === 'true';
+        if (!isAuthed) {
+          window.history.pushState({}, '', '/');
+          setView('login');
+        } else {
+          setView('landing');
+        }
+      } else if (path === '/' && (clerkIsSignedIn || !!supabaseUser)) {
+        window.history.pushState({}, '', '/dashboard');
+        setView('landing');
+      }
+    };
+
+    handleAuthCallback();
+
+    // Listen for window popstate events (e.g. forward/back browser clicks)
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path === '/dashboard') {
+        setView('landing');
+      } else if (path === '/') {
+        setView('login');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [clerkKey, clerkIsSignedIn, clerkUser, supabaseUrl, supabaseUser]);
 
   // Helper to connect mock wallet
   const connectWallet = () => {
@@ -664,6 +755,12 @@ function AppContent({ clerkKey, setClerkKey, clerkIsSignedIn, clerkUser }: AppCo
         setNugenKey={setNugenKey}
         clerkKey={clerkKey}
         setClerkKey={setClerkKey}
+        supabaseUrl={supabaseUrl}
+        setSupabaseUrl={setSupabaseUrl}
+        supabaseAnonKey={supabaseAnonKey}
+        setSupabaseAnonKey={setSupabaseAnonKey}
+        supabaseUser={supabaseUser}
+        handleLogout={handleLogout}
       />
 
       {/* Main Content Area */}
@@ -732,6 +829,33 @@ function AppContent({ clerkKey, setClerkKey, clerkIsSignedIn, clerkUser }: AppCo
                   </div>
                 ) : (
                   <>
+                    {supabaseUrl && (
+                      <div className="news-panel" style={{ textAlign: 'center', padding: '16px', background: 'transparent', marginBottom: '16px' }}>
+                        <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '10px', textTransform: 'uppercase', fontWeight: 'bold' }}>Supabase Secure Desk</span>
+                        <button 
+                          onClick={async () => {
+                            try {
+                              setAuthLoading('Google');
+                              await activeSupabase.auth.signInWithOAuth({
+                                provider: "google",
+                                options: {
+                                  redirectTo: "http://localhost:3000/auth/callback"
+                                }
+                              });
+                            } catch (err) {
+                              console.error("Supabase sign in failed", err);
+                              alert("Supabase Google Auth failed to establish connection.");
+                              setAuthLoading('');
+                            }
+                          }}
+                          className="news-button" 
+                          style={{ width: '100%', padding: '10px', fontSize: '12px' }}
+                        >
+                          Sign In with Google
+                        </button>
+                      </div>
+                    )}
+
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
                       <div>
                         <label style={{ display: 'block', fontSize: '11px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', marginBottom: '6px' }}>Email</label>
@@ -765,6 +889,8 @@ function AppContent({ clerkKey, setClerkKey, clerkIsSignedIn, clerkUser }: AppCo
                           alert("Please enter both subscriber email and credentials password.");
                           return;
                         }
+                        localStorage.setItem('hireme_mock_authed', 'true');
+                        window.history.pushState({}, '', '/dashboard');
                         setView('landing');
                       }}
                       className="news-button"
@@ -798,7 +924,24 @@ function AppContent({ clerkKey, setClerkKey, clerkIsSignedIn, clerkUser }: AppCo
                       {['Google', 'GitHub', 'Facebook'].map((social) => (
                         <button 
                           key={social}
-                          onClick={() => handleSocialLogin(social)}
+                          onClick={async () => {
+                            if (social === 'Google' && supabaseUrl) {
+                              try {
+                                setAuthLoading('Google');
+                                await activeSupabase.auth.signInWithOAuth({
+                                  provider: "google",
+                                  options: {
+                                    redirectTo: "http://localhost:3000/auth/callback"
+                                  }
+                                });
+                              } catch (err) {
+                                console.error("Supabase Google OAuth failed:", err);
+                                setAuthLoading('');
+                              }
+                            } else {
+                              handleSocialLogin(social);
+                            }
+                          }}
                           disabled={!!authLoading}
                           className="news-button-outline"
                           style={{
@@ -1653,6 +1796,12 @@ interface AppContentProps {
   setClerkKey: (key: string) => void;
   clerkIsSignedIn: boolean;
   clerkUser: any;
+  supabaseUrl: string;
+  setSupabaseUrl: (url: string) => void;
+  supabaseAnonKey: string;
+  setSupabaseAnonKey: (key: string) => void;
+  supabaseUser: any;
+  handleLogout: () => void;
 }
 
 const ClerkUserLoader = ({ children }: { children: (userProps: { isSignedIn: boolean; user: any }) => React.ReactNode }) => {
@@ -1664,6 +1813,13 @@ export default function App() {
   const [clerkKey, setClerkKey] = useState<string>(
     () => localStorage.getItem('hireme_clerk_key') || import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || ''
   );
+  const [supabaseUrl, setSupabaseUrl] = useState<string>(
+    () => localStorage.getItem('hireme_supabase_url') || import.meta.env.VITE_SUPABASE_URL || ''
+  );
+  const [supabaseAnonKey, setSupabaseAnonKey] = useState<string>(
+    () => localStorage.getItem('hireme_supabase_anon_key') || import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+  );
+  const [supabaseUser, setSupabaseUser] = useState<any>(null);
 
   const handleSaveClerkKey = (newKey: string) => {
     setClerkKey(newKey);
@@ -1672,6 +1828,65 @@ export default function App() {
     } else {
       localStorage.removeItem('hireme_clerk_key');
     }
+  };
+
+  const handleSaveSupabaseUrl = (newUrl: string) => {
+    setSupabaseUrl(newUrl);
+    if (newUrl) {
+      localStorage.setItem('hireme_supabase_url', newUrl);
+    } else {
+      localStorage.removeItem('hireme_supabase_url');
+    }
+    reinitSupabase(newUrl, supabaseAnonKey);
+  };
+
+  const handleSaveSupabaseAnonKey = (newKey: string) => {
+    setSupabaseAnonKey(newKey);
+    if (newKey) {
+      localStorage.setItem('hireme_supabase_anon_key', newKey);
+    } else {
+      localStorage.removeItem('hireme_supabase_anon_key');
+    }
+    reinitSupabase(supabaseUrl, newKey);
+  };
+
+  const handleLogout = async () => {
+    localStorage.removeItem('hireme_mock_authed');
+    if (isSupabaseConfigured()) {
+      await activeSupabase.auth.signOut();
+    }
+    setSupabaseUser(null);
+    window.location.href = '/';
+  };
+
+  // Listen to Supabase session changes
+  useEffect(() => {
+    if (isSupabaseConfigured()) {
+      activeSupabase.auth.getUser().then(({ data: { user } }) => {
+        if (user) setSupabaseUser(user);
+      });
+
+      const { data: { subscription } } = activeSupabase.auth.onAuthStateChange((_event, session) => {
+        if (session && session.user) {
+          setSupabaseUser(session.user);
+        } else {
+          setSupabaseUser(null);
+        }
+      });
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
+  }, [supabaseUrl, supabaseAnonKey]);
+
+  const appContentProps = {
+    supabaseUrl,
+    setSupabaseUrl: handleSaveSupabaseUrl,
+    supabaseAnonKey,
+    setSupabaseAnonKey: handleSaveSupabaseAnonKey,
+    supabaseUser,
+    handleLogout
   };
 
   if (clerkKey) {
@@ -1684,6 +1899,7 @@ export default function App() {
               setClerkKey={handleSaveClerkKey} 
               clerkIsSignedIn={isSignedIn} 
               clerkUser={user} 
+              {...appContentProps}
             />
           )}
         </ClerkUserLoader>
@@ -1697,6 +1913,7 @@ export default function App() {
       setClerkKey={handleSaveClerkKey} 
       clerkIsSignedIn={false} 
       clerkUser={null} 
+      {...appContentProps}
     />
   );
 }

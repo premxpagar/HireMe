@@ -18,6 +18,12 @@ interface NavbarProps {
   setNugenKey: (key: string) => void;
   clerkKey: string;
   setClerkKey: (key: string) => void;
+  supabaseUrl: string;
+  setSupabaseUrl: (url: string) => void;
+  supabaseAnonKey: string;
+  setSupabaseAnonKey: (key: string) => void;
+  supabaseUser: any;
+  handleLogout: () => void;
 }
 
 interface InnerNavbarProps extends NavbarProps {
@@ -34,7 +40,9 @@ const ClerkNavbarContent: React.FC<InnerNavbarProps> = ({
   connectWallet,
   walletAddress,
   walletBalance,
-  onOpenSettings
+  onOpenSettings,
+  supabaseUser,
+  handleLogout
 }) => {
   const { isSignedIn, user } = useUser();
 
@@ -118,10 +126,29 @@ const ClerkNavbarContent: React.FC<InnerNavbarProps> = ({
       )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        {currentView !== 'login' && isSignedIn && user && (
-          <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', border: 'var(--border-thin)', padding: '6px 10px', background: 'transparent' }}>
-            {user.firstName || user.primaryEmailAddress?.emailAddress.split('@')[0]}
-          </span>
+        {currentView !== 'login' && (
+          <>
+            {/* Supabase User details if active */}
+            {supabaseUser && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {supabaseUser.user_metadata?.avatar_url && (
+                  <div style={{ border: 'var(--border-thin)', padding: '2px', display: 'flex', alignItems: 'center', width: '32px', height: '32px', overflow: 'hidden' }}>
+                    <img src={supabaseUser.user_metadata.avatar_url} alt="Google Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                )}
+                <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase' }}>
+                  {supabaseUser.email?.split('@')[0]}
+                </span>
+              </div>
+            )}
+
+            {/* Clerk User details if active */}
+            {isSignedIn && user && (
+              <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', border: 'var(--border-thin)', padding: '6px 10px', background: 'transparent' }}>
+                {user.firstName || user.primaryEmailAddress?.emailAddress.split('@')[0]}
+              </span>
+            )}
+          </>
         )}
 
         <button
@@ -191,6 +218,16 @@ const ClerkNavbarContent: React.FC<InnerNavbarProps> = ({
             <UserButton />
           </div>
         )}
+
+        {currentView !== 'login' && (supabaseUser || isSignedIn) && (
+          <button
+            onClick={handleLogout}
+            className="news-button-outline"
+            style={{ padding: '8px 14px', fontSize: '11px', height: '36px', fontFamily: 'var(--font-mono)', fontWeight: 'bold', textTransform: 'uppercase' }}
+          >
+            Logout
+          </button>
+        )}
       </div>
     </nav>
   );
@@ -206,7 +243,9 @@ const MockNavbarContent: React.FC<InnerNavbarProps> = ({
   connectWallet,
   walletAddress,
   walletBalance,
-  onOpenSettings
+  onOpenSettings,
+  supabaseUser,
+  handleLogout
 }) => {
   const navItems = [
     { id: 'landing', label: 'Home', icon: Cpu },
@@ -288,6 +327,19 @@ const MockNavbarContent: React.FC<InnerNavbarProps> = ({
       )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {currentView !== 'login' && supabaseUser && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {supabaseUser.user_metadata?.avatar_url && (
+              <div style={{ border: 'var(--border-thin)', padding: '2px', display: 'flex', alignItems: 'center', width: '32px', height: '32px', overflow: 'hidden' }}>
+                <img src={supabaseUser.user_metadata.avatar_url} alt="Google Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+            )}
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase' }}>
+              {supabaseUser.email?.split('@')[0]}
+            </span>
+          </div>
+        )}
+
         <button
           onClick={() => setDarkMode(!darkMode)}
           style={{
@@ -349,6 +401,16 @@ const MockNavbarContent: React.FC<InnerNavbarProps> = ({
             </span>
           </button>
         )}
+
+        {currentView !== 'login' && supabaseUser && (
+          <button
+            onClick={handleLogout}
+            className="news-button-outline"
+            style={{ padding: '8px 14px', fontSize: '11px', height: '36px', fontFamily: 'var(--font-mono)', fontWeight: 'bold', textTransform: 'uppercase' }}
+          >
+            Logout
+          </button>
+        )}
       </div>
     </nav>
   );
@@ -359,10 +421,14 @@ export const Navbar: React.FC<NavbarProps> = (props) => {
   const [showSettings, setShowSettings] = useState(false);
   const [tempNugenKey, setTempNugenKey] = useState(props.nugenKey);
   const [tempClerkKey, setTempClerkKey] = useState(props.clerkKey);
+  const [tempSupabaseUrl, setTempSupabaseUrl] = useState(props.supabaseUrl);
+  const [tempSupabaseAnonKey, setTempSupabaseAnonKey] = useState(props.supabaseAnonKey);
 
   const handleSaveKeys = () => {
     props.setNugenKey(tempNugenKey);
     props.setClerkKey(tempClerkKey);
+    props.setSupabaseUrl(tempSupabaseUrl);
+    props.setSupabaseAnonKey(tempSupabaseAnonKey);
     setShowSettings(false);
   };
 
@@ -395,10 +461,12 @@ export const Navbar: React.FC<NavbarProps> = (props) => {
         }}>
           <div className="news-panel-thick" style={{
             width: '100%',
-            maxWidth: '480px',
+            maxWidth: '520px',
             padding: '32px',
             background: 'var(--bg-paper)',
-            textAlign: 'left'
+            textAlign: 'left',
+            maxHeight: '90vh',
+            overflowY: 'auto'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
               <Key size={18} />
@@ -422,12 +490,12 @@ export const Navbar: React.FC<NavbarProps> = (props) => {
                 className="news-input"
               />
               <span style={{ display: 'block', fontSize: '9px', fontFamily: 'var(--font-mono)', opacity: 0.6, marginTop: '4px' }}>
-                Used for live recruiter agent matches and scorecard audits.
+                Used for live recruiter matching and evaluation audits.
               </span>
             </div>
 
             {/* Clerk Section */}
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: '16px', borderBottom: 'var(--border-thin)', paddingBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '10px', fontFamily: 'var(--font-mono)', marginBottom: '6px', textTransform: 'uppercase', fontWeight: 'bold' }}>
                 Clerk Publishable Key
               </label>
@@ -440,6 +508,34 @@ export const Navbar: React.FC<NavbarProps> = (props) => {
               />
               <span style={{ display: 'block', fontSize: '9px', fontFamily: 'var(--font-mono)', opacity: 0.6, marginTop: '4px' }}>
                 Used for Clerk User Authentication. If left blank, defaults to local guest flow.
+              </span>
+            </div>
+
+            {/* Supabase Section */}
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', fontSize: '10px', fontFamily: 'var(--font-mono)', marginBottom: '6px', textTransform: 'uppercase', fontWeight: 'bold' }}>
+                Supabase Project URL
+              </label>
+              <input
+                type="text"
+                placeholder="https://your-project.supabase.co"
+                value={tempSupabaseUrl}
+                onChange={(e) => setTempSupabaseUrl(e.target.value)}
+                className="news-input"
+                style={{ marginBottom: '12px' }}
+              />
+              <label style={{ display: 'block', fontSize: '10px', fontFamily: 'var(--font-mono)', marginBottom: '6px', textTransform: 'uppercase', fontWeight: 'bold' }}>
+                Supabase Anon Key
+              </label>
+              <input
+                type="password"
+                placeholder="eyJhbGciOi..."
+                value={tempSupabaseAnonKey}
+                onChange={(e) => setTempSupabaseAnonKey(e.target.value)}
+                className="news-input"
+              />
+              <span style={{ display: 'block', fontSize: '9px', fontFamily: 'var(--font-mono)', opacity: 0.6, marginTop: '4px' }}>
+                Used for Supabase Google OAuth and profile synchronization.
               </span>
             </div>
 
